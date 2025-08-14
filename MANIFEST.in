@@ -1,0 +1,5 @@
+recursive-include qr_foundry *.json *.js *.css *.py *.html
+recursive-include qr_foundry/templates *
+recursive-include qr_foundry/public *
+recursive-include qr_foundry/www *
+include README.md

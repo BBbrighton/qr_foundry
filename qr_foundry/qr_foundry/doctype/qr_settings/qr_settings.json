@@ -1,0 +1,50 @@
+{
+  "doctype": "DocType",
+  "name": "QR Settings",
+  "module": "QR Foundry",
+  "issingle": 1,
+  "custom": 0,
+  "track_changes": 1,
+  "field_order": [
+    "allowed_domains",
+    "default_rate_limit_per_min",
+    "require_login",
+    "section_rules",
+    "rules"
+  ],
+  "fields": [
+    {
+      "fieldname": "allowed_domains",
+      "label": "Allowed Domains (one per line)",
+      "fieldtype": "Small Text",
+      "description": "Limit external redirects to these hosts. Leave blank to allow any http(s)."
+    },
+    {
+      "fieldname": "default_rate_limit_per_min",
+      "label": "Default Rate Limit / Minute",
+      "fieldtype": "Int",
+      "description": "Resolver uses this only if a token has no per-minute limit."
+    },
+    {
+      "fieldname": "require_login",
+      "label": "Require Login to Resolve",
+      "fieldtype": "Check",
+      "default": "0",
+      "description": "If enabled, /qr?token=... requires a signed-in user."
+    },
+    {
+      "fieldname": "section_rules",
+      "label": "Enable QR Button on DocTypes",
+      "fieldtype": "Section Break"
+    },
+    {
+      "fieldname": "rules",
+      "label": "Rules",
+      "fieldtype": "Table",
+      "options": "QR Settings Rule"
+    }
+  ],
+  "permissions": [
+    { "role": "System Manager", "read": 1, "write": 1 }
+  ]
+}

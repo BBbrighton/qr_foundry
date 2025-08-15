@@ -1,0 +1,50 @@
+{
+  "doctype": "DocType",
+  "name": "QR Rule",
+  "module": "QR Foundry",
+  "custom": 0,
+  "istable": 0,
+  "track_changes": 0,
+  "allow_rename": 0,
+  "field_order": [
+    "doctype_name",
+    "default_link_type",
+    "default_action",
+    "auto_generate_on_first_save"
+  ],
+  "fields": [
+    {
+      "fieldname": "doctype_name",
+      "label": "DocType",
+      "fieldtype": "Data",
+      "reqd": 1,
+      "unique": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "default_link_type",
+      "label": "Link Type",
+      "fieldtype": "Select",
+      "options": "Direct\nToken",
+      "default": "Direct",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "default_action",
+      "label": "Default Action",
+      "fieldtype": "Select",
+      "options": "view\nprint\nedit",
+      "default": "view",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "auto_generate_on_first_save",
+      "label": "Auto-generate on First Save",
+      "fieldtype": "Check",
+      "default": "0"
+    }
+  ],
+  "permissions": [
+    { "role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1 }
+  ]
+}

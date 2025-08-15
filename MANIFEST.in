@@ -1,5 +1,15 @@
-recursive-include qr_foundry *.json *.js *.css *.py *.html
-recursive-include qr_foundry/templates *
-recursive-include qr_foundry/public *
-recursive-include qr_foundry/www *
-include README.md
+# Always include package data alongside Python code
+recursive-include qr_foundry *.py
+
+# Include all app resources you’ll need at runtime
+recursive-include qr_foundry *.json *.js *.css *.html *.md *.txt *.svg *.png *.jpg *.jpeg *.woff *.woff2
+
+# (optional) include translations if you add them later
+recursive-include qr_foundry/translations *.csv
+
+# Exclude junk
+prune **/__pycache__
+prune **/.DS_Store
+prune qr_foundry/node_modules
+
+exclude *.pyc *.pyo

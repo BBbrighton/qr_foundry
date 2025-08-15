@@ -1,0 +1,75 @@
+{
+  "charts": [],
+  "content": "[{\"id\":\"qr-header\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">QR Foundry</span>\",\"col\":12}},{\"id\":\"qr-shortcuts\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"QR List\",\"col\":3}},{\"id\":\"qr-token-shortcut\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"QR Token\",\"col\":3}},{\"id\":\"qr-log-shortcut\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"QR Scan Log\",\"col\":3}},{\"id\":\"qr-settings-shortcut\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"QR Settings\",\"col\":3}},{\"id\":\"qr-reports-header\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h5\\\">Reports & Analytics</span>\",\"col\":12}},{\"id\":\"qr-active-tokens\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Active QR Tokens\",\"col\":3}},{\"id\":\"qr-scan-analytics\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Scan Analytics\",\"col\":3}}]",
+  "creation": "2025-08-15 00:00:00.000000",
+  "custom_blocks": [],
+  "docstatus": 0,
+  "doctype": "Workspace",
+  "for_user": "",
+  "hide_custom": 0,
+  "icon": "qrcode",
+  "idx": 0,
+  "indicator_color": "blue",
+  "is_hidden": 0,
+  "label": "QR Foundry",
+  "links": [],
+  "modified": "2025-08-15 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "QR Foundry",
+  "name": "QR Foundry",
+  "number_cards": [],
+  "owner": "Administrator",
+  "parent_page": "",
+  "public": 1,
+  "quick_lists": [],
+  "restrict_to_domain": "",
+  "roles": [],
+  "sequence_id": 30.0,
+  "shortcuts": [
+    {
+      "color": "Grey",
+      "doc_view": "List",
+      "label": "QR List",
+      "link_to": "QR List",
+      "type": "DocType"
+    },
+    {
+      "color": "Grey",
+      "doc_view": "List",
+      "label": "QR Token",
+      "link_to": "QR Token",
+      "type": "DocType"
+    },
+    {
+      "color": "Grey",
+      "doc_view": "List",
+      "label": "QR Scan Log",
+      "link_to": "QR Scan Log",
+      "type": "DocType"
+    },
+    {
+      "color": "Blue",
+      "doc_view": "Form",
+      "label": "QR Settings",
+      "link_to": "QR Settings",
+      "type": "DocType"
+    },
+    {
+      "color": "Green",
+      "doc_view": "Report",
+      "label": "Active QR Tokens",
+      "link_to": "QR Token",
+      "type": "Report",
+      "report_type": "Report Builder"
+    },
+    {
+      "color": "Orange",
+      "doc_view": "Report",
+      "label": "Scan Analytics",
+      "link_to": "QR Scan Log",
+      "type": "Report",
+      "report_type": "Report Builder"
+    }
+  ],
+  "title": "QR Foundry"
+}

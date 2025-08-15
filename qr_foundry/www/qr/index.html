@@ -1,0 +1,13 @@
+{% if mode == "value" %}
+  <meta name="referrer" content="no-referrer">
+  <h2>QR</h2>
+  <p>{{ value }}</p>
+{% elif mode == "message" %}
+  <meta name="referrer" content="no-referrer">
+  <h2>{{ title }}</h2>
+  <p>{{ message }}</p>
+{% else %}
+  <meta name="referrer" content="no-referrer">
+  <h2>QR</h2>
+  <p>Nothing to show.</p>
+{% endif %}

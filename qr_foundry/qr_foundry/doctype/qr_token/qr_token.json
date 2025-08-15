@@ -1,0 +1,60 @@
+{
+  "doctype": "DocType",
+  "name": "QR Token",
+  "module": "QR Foundry",
+  "custom": 0,
+  "istable": 0,
+  "track_changes": 1,
+  "editable_grid": 0,
+  "allow_rename": 0,
+  "autoname": "format: TKN-{YYYY}-{#####}",
+
+  "field_order": [
+    "token",
+    "qr_list",
+    "encoded_content",
+    "label_text",
+    "status",
+    "expires_on",
+    "max_uses",
+    "use_count",
+    "last_used_on",
+    "rate_limit_per_min",
+    "image",
+    "file_url",
+    "absolute_file_url",
+    "notes"
+  ],
+
+  "fields": [
+    { "fieldname": "token", "fieldtype": "Data", "label": "Token (URL Key)", "reqd": 1, "unique": 1, "in_list_view": 1, "in_standard_filter": 1, "bold": 1, "read_only": 1 },
+    { "fieldname": "qr_list", "fieldtype": "Link", "label": "QR List", "options": "QR List", "in_standard_filter": 1 },
+
+    { "fieldname": "encoded_content", "fieldtype": "Small Text", "label": "Encoded Content (final target)", "read_only": 1, "description": "Immutable final redirect target" },
+    { "fieldname": "label_text", "fieldtype": "Data", "label": "Label (optional)", "read_only": 1 },
+
+    { "fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Active\nRevoked\nExpired", "default": "Active", "in_list_view": 1, "in_standard_filter": 1 },
+    { "fieldname": "expires_on", "fieldtype": "Datetime", "label": "Expires On", "in_standard_filter": 1 },
+    { "fieldname": "max_uses", "fieldtype": "Int", "label": "Max Uses", "default": 0, "description": "0 = unlimited" },
+    { "fieldname": "use_count", "fieldtype": "Int", "label": "Use Count", "default": 0, "read_only": 1, "in_list_view": 1 },
+    { "fieldname": "last_used_on", "fieldtype": "Datetime", "label": "Last Used On", "read_only": 1, "in_standard_filter": 1 },
+    { "fieldname": "rate_limit_per_min", "fieldtype": "Int", "label": "Rate Limit per Minute", "default": 0, "description": "0 = unlimited" },
+
+    { "fieldname": "image", "fieldtype": "Attach Image", "label": "QR Image", "read_only": 1 },
+    { "fieldname": "file_url", "fieldtype": "Data", "label": "File URL", "read_only": 1 },
+    { "fieldname": "absolute_file_url", "fieldtype": "Data", "label": "Absolute File URL", "read_only": 1 },
+
+    { "fieldname": "notes", "fieldtype": "Small Text", "label": "Notes" }
+  ],
+
+  "permissions": [
+    { "role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "print": 1, "email": 1, "export": 1, "report": 1, "share": 1 },
+    { "role": "QR Manager", "read": 1, "write": 1, "create": 1, "delete": 0, "print": 1 },
+    { "role": "All", "read": 1 }
+  ],
+
+  "sort_field": "modified",
+  "sort_order": "desc",
+  "quick_entry": 0,
+  "allow_import": 1
+}

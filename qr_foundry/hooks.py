@@ -25,8 +25,8 @@ app_license = "mit"
 # ------------------
 
 # include js, css files in header of desk.html
-# app_include_css = "/assets/qr_foundry/css/qr_foundry.css"
-# app_include_js = "/assets/qr_foundry/js/qr_foundry.js"
+app_include_css = "qr_foundry.bundle.css"
+app_include_js = "qr_foundry.bundle.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/qr_foundry/css/qr_foundry.css"

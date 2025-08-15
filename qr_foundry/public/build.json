@@ -1,0 +1,4 @@
+{
+  "js/qr_foundry.bundle.js": ["public/js/qr_foundry/index.js"],
+  "css/qr_foundry.bundle.css": ["public/css/qr_foundry.css"]
+}

@@ -1,16 +1,1 @@
-/* QR Foundry - Main Stylesheet */
-
-.qr-foundry-container {
-    /* Add app-specific styles here */
-}
-
-/* QR Code display styles */
-.qr-code {
-    text-align: center;
-    margin: 20px 0;
-}
-
-.qr-code img {
-    max-width: 100%;
-    height: auto;
-}
+/* qr_foundry base */

@@ -16,15 +16,17 @@ A comprehensive QR code generation and management system for Frappe/ERPNext that
 ### Installation
 
 ```bash
-# Install the app
-bench get-app qr_foundry https://github.com/BBbrighton/qr_foundry
+# 1. Get the app (skip assets to avoid build conflicts)
+bench get-app https://github.com/BBbrighton/qr_foundry --skip-assets
+
+# 2. Add to apps registry
+echo "qr_foundry" >> ~/frappe-bench/sites/apps.txt
+
+# 3. Install to your site
 bench --site [your-site] install-app qr_foundry
 
-# Run migrations
-bench --site [your-site] migrate
-
-# Build assets
-bench build
+# 4. Build assets (optional, if you need frontend features)
+bench build --app qr_foundry
 ```
 
 ### Basic Usage

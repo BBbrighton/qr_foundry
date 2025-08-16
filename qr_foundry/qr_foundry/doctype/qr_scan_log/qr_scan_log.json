@@ -21,7 +21,7 @@
   "fields": [
     {"fieldname": "token", "label": "QR Token", "fieldtype": "Link", "options": "QR Token", "in_standard_filter": 1},
     {"fieldname": "qr_list", "label": "QR List", "fieldtype": "Link", "options": "QR List", "in_standard_filter": 1},
-    {"fieldname": "result", "label": "Result", "fieldtype": "Select", "options": "success\nexpired\nmax_used\nrate_limited\nnot_found\nforbidden", "in_list_view": 1, "in_standard_filter": 1},
+    {"fieldname": "result", "label": "Result", "fieldtype": "Select", "options": "success\nexpired\nmax_used\nrate_limited\nnot_found\nforbidden\ninvalid\nlogin_required\nrevoked", "in_list_view": 1, "in_standard_filter": 1},
     {"fieldname": "redirect_url", "label": "Redirect URL (redacted)", "fieldtype": "Small Text"},
     {"fieldname": "client_user", "label": "Client User", "fieldtype": "Link", "options": "User"},
     {"fieldname": "ip_address", "label": "IP Address", "fieldtype": "Data"},
@@ -36,8 +36,8 @@
   "name": "QR Scan Log",
   "owner": "Administrator",
   "permissions": [
-    {"role": "System Manager", "read": 1, "report": 1, "export": 1},
-    {"role": "Support Team", "read": 1, "report": 1}
+    { "role": "System Manager", "read": 1, "report": 1, "export": 1 },
+    { "role": "QR Manager",     "read": 1, "report": 1, "export": 1 }
   ],
   "quick_entry": 0,
   "track_changes": 0,

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QR Test Print Format</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .qr-section { border: 1px solid #ccc; padding: 15px; margin: 10px 0; }
+        .qr-code { text-align: center; margin: 10px 0; }
+        .qr-code img { max-width: 200px; border: 1px solid #999; }
+        .doc-info { background: #f5f5f5; padding: 10px; margin: 10px 0; }
+        .test-section { border-left: 3px solid #007bff; padding-left: 10px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h1>QR Foundry Print Format Test</h1>
+    
+    <div class="doc-info">
+        <strong>Document:</strong> {{ doc.doctype }} - {{ doc.name }}<br>
+        {% if doc.title %}
+        <strong>Title:</strong> {{ doc.title }}<br>
+        {% endif %}
+        <strong>Test Date:</strong> {{ frappe.utils.now() }}
+    </div>
+
+    <div class="test-section">
+        <h2>Test 1: QR Data URI Helper</h2>
+        <div class="qr-section">
+            <p><strong>Function:</strong> <code>qr_data_uri(doctype, name)</code></p>
+            <p><strong>Purpose:</strong> Generate a data URI for QR code that links to this document</p>
+            
+            {% try %}
+                {% set qr_data = qr_data_uri(doc.doctype, doc.name) %}
+                <div class="qr-code">
+                    <img src="{{ qr_data }}" alt="QR Code for {{ doc.doctype }} {{ doc.name }}">
+                    <p>✅ Success: QR code generated successfully</p>
+                </div>
+            {% except %}
+                <p>❌ Error: Failed to generate QR code - {{ frappe.get_traceback() }}</p>
+            {% endtry %}
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: File Embedding Helper</h2>
+        <div class="qr-section">
+            <p><strong>Function:</strong> <code>embed_file(file_url)</code></p>
+            <p><strong>Purpose:</strong> Convert any file URL to data URI for embedding</p>
+            
+            {% if doc.image %}
+                {% try %}
+                    {% set embedded_image = embed_file(doc.image) %}
+                    <div class="qr-code">
+                        <img src="{{ embedded_image }}" alt="Embedded file" style="max-width: 150px;">
+                        <p>✅ Success: File embedded successfully</p>
+                        <p><small>Original URL: {{ doc.image }}</small></p>
+                    </div>
+                {% except %}
+                    <p>❌ Error: Failed to embed file - {{ frappe.get_traceback() }}</p>
+                {% endtry %}
+            {% else %}
+                <p>ℹ️ No image field found in this document to test file embedding</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: Privacy Settings</h2>
+        <div class="qr-section">
+            <p><strong>Test:</strong> Check if QR images are stored privately by default</p>
+            {% try %}
+                {% set qr_settings = frappe.get_single("QR Settings") %}
+                {% if qr_settings.store_images_private %}
+                    <p>✅ Success: QR images are configured to be stored privately</p>
+                {% else %}
+                    <p>⚠️ Warning: QR images are configured to be stored publicly</p>
+                {% endif %}
+            {% except %}
+                <p>❌ Error: Could not read QR Settings</p>
+            {% endtry %}
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 4: Print Format Compatibility</h2>
+        <div class="qr-section">
+            <p><strong>Test:</strong> Verify all Jinja methods are available</p>
+            
+            <table border="1" cellpadding="5" cellspacing="0" style="width: 100%;">
+                <tr>
+                    <th>Method</th>
+                    <th>Available</th>
+                    <th>Status</th>
+                </tr>
+                <tr>
+                    <td>qr_data_uri</td>
+                    <td>{{ 'qr_data_uri' in dir() }}</td>
+                    <td>{% if 'qr_data_uri' in dir() %}✅{% else %}❌{% endif %}</td>
+                </tr>
+                <tr>
+                    <td>embed_file</td>
+                    <td>{{ 'embed_file' in dir() }}</td>
+                    <td>{% if 'embed_file' in dir() %}✅{% else %}❌{% endif %}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 5: Example Usage in Real Print Format</h2>
+        <div class="qr-section">
+            <p><strong>Example:</strong> How to use these helpers in a real print format</p>
+            
+            <h3>Document Header with QR</h3>
+            <table width="100%">
+                <tr>
+                    <td width="70%">
+                        <h2>{{ doc.doctype }}: {{ doc.name }}</h2>
+                        {% if doc.title %}
+                        <p><strong>{{ doc.title }}</strong></p>
+                        {% endif %}
+                        <p>Date: {{ frappe.utils.now() }}</p>
+                    </td>
+                    <td width="30%" style="text-align: center;">
+                        {% try %}
+                            <img src="{{ qr_data_uri(doc.doctype, doc.name) }}" 
+                                 alt="QR Code" 
+                                 style="width: 120px; height: 120px;">
+                            <br><small>Scan for details</small>
+                        {% except %}
+                            <div style="border: 1px dashed #ccc; width: 120px; height: 120px; line-height: 120px; text-align: center;">
+                                No QR
+                            </div>
+                        {% endtry %}
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div style="margin-top: 30px; padding: 10px; background: #e8f4f8; border-left: 4px solid #007bff;">
+        <h3>✅ Test Complete</h3>
+        <p>This print format demonstrates the QR Foundry Jinja helpers for embedding QR codes and files as data URIs in print formats. All data is embedded directly in the HTML, making prints work offline and ensuring privacy.</p>
+    </div>
+
+</body>
+</html>

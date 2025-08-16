@@ -239,7 +239,7 @@ def get_context(context):
 		return context
 
 	# Read only columns that exist
-	base = ["name", "status", "encoded_content"]
+	base = ["name", "status", "encoded_content", "qr_list"]
 	optional = ["expires_on", "max_uses", "use_count", "rate_limit_per_min", "last_used_on"]
 	try:
 		meta = frappe.get_meta("QR Token")
@@ -275,24 +275,43 @@ def get_context(context):
 		frappe.local.response["http_status_code"] = 410
 		return context
 
-	st = _settings()
-	if st.get("require_login") and frappe.session.user == "Guest":
-		_log("login_required", tok["name"], None)
-		context.update(
-			{
-				"mode": "message",
-				"title": "Login required",
-				"message": "Please sign in to access this code.",
-				"code": "login_required",
-			}
-		)
-		frappe.local.response["http_status_code"] = 401
-		return context
-
-	# Resolve target (allow relative)
+	# --- Resolve target once, upfront, for logging and redirects ---
 	target = (tok.get("encoded_content") or "").strip()
+
+	# Normalize to absolute if relative
 	if target and not target.startswith(("http://", "https://")):
 		target = get_url(target)
+
+	# Self-heal if encoded_content accidentally points back to the resolver
+	if target and (target.startswith("/qr?token=") or target.endswith(f"token={tok_str}")):
+		try:
+			qr = frappe.get_doc("QR List", tok["qr_list"])
+			from frappe.utils import get_url_to_form, get_url_to_list
+			dt, dn = qr.target_doctype, qr.target_name
+			action = (getattr(qr, "action", None) or "view").lower()
+			if action in ("view", "", None):
+				rebuilt_rel = get_url_to_form(dt, dn)
+			elif action == "list":
+				rebuilt_rel = get_url_to_list(dt)
+			else:
+				rebuilt_rel = get_url_to_form(dt, dn)
+			target = get_url(rebuilt_rel)
+		except Exception:
+			# keep target as-is or None; logging can handle None
+			pass
+
+	st = _settings()
+	if st.get("require_login") and frappe.session.user == "Guest":
+		# target is now defined (may be None); safe for logging
+		_log("login_required", tok["name"], target)
+
+		from urllib.parse import quote
+		# Redirect to login, then back to the resolver so we can consume token and log "ok" post-login
+		resolver_url = get_url(f"/qr?token={tok_str}")
+		login_url = f"/login?redirect-to={quote(resolver_url, safe='')}"
+		_sec_headers()
+		frappe.local.flags.redirect_location = login_url
+		raise frappe.Redirect
 
 	# Hard expiry check (no consumption)
 	if "expires_on" in fields and tok.get("expires_on") and now_datetime() > tok.get("expires_on"):
@@ -321,10 +340,21 @@ def get_context(context):
 		return context
 
 	# Allowed domain check BEFORE consumption
-	if not (target and _is_allowed_url(target, st["allowed_domains"])):
-		_log("forbidden", tok["name"], None)
-		context.update({"mode": "value", "value": target})
-		return context  # 200 OK, show value without consuming a use
+	site_root = get_url("/")
+	is_same_site = target and target.startswith(site_root)
+	is_allowed = is_same_site or _is_allowed_url(target, st["allowed_domains"])
+	if not (target and is_allowed):
+		_log("forbidden", tok["name"], target)  # Log the blocked target for audit
+		context.update(
+			{
+				"mode": "message",
+				"title": "Access Denied",
+				"message": "The requested resource is not available through this service.",
+				"code": "forbidden",
+			}
+		)
+		frappe.local.response["http_status_code"] = 403
+		return context
 
 	# Atomic consumption (enforces max_uses/expiry)
 	has_max = "max_uses" in fields and "use_count" in fields

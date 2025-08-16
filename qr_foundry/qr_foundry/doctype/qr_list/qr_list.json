@@ -15,6 +15,7 @@
     "target_doctype",
     "target_name",
     "action",
+    "print_format",
     "custom_route",
     "value_doctype",
     "value_name",
@@ -26,7 +27,6 @@
     "image",
     "file_url",
     "absolute_file_url",
-    "qr_token",
     "status"
   ],
   "fields": [
@@ -36,6 +36,8 @@
     { "fieldname": "target_doctype", "fieldtype": "Link", "label": "Target DocType", "options": "DocType", "depends_on": "eval:doc.qr_mode=='URL'", "mandatory_depends_on": "eval:doc.qr_mode=='URL'", "in_list_view": 1 },
     { "fieldname": "target_name", "fieldtype": "Dynamic Link", "label": "Target Name", "options": "target_doctype", "depends_on": "eval:doc.qr_mode=='URL'", "mandatory_depends_on": "eval:doc.qr_mode=='URL'", "in_list_view": 1 },
     { "fieldname": "action", "fieldtype": "Select", "label": "Action", "options": "view\nedit\nprint\nreport\ncustom_url", "default": "view", "depends_on": "eval:doc.qr_mode=='URL'", "mandatory_depends_on": "eval:doc.qr_mode=='URL'" },
+    { "fieldname": "print_format", "fieldtype": "Link", "label": "Print Format", "options": "Print Format", "depends_on": "eval:doc.qr_mode=='URL' && doc.action=='print'", "read_only": 0 },
+    { "fieldname": "store_private", "fieldtype": "Check", "label": "Store Image as Private", "default": 0, "description": "Override global privacy setting for this QR" },
     { "fieldname": "custom_route", "fieldtype": "Data", "label": "Custom Route/URL (for custom_url/report)", "depends_on": "eval:doc.qr_mode=='URL' && (doc.action=='custom_url' || doc.action=='report')" },
     { "fieldname": "value_doctype", "fieldtype": "Link", "label": "Value DocType", "options": "DocType", "depends_on": "eval:doc.qr_mode=='Value'", "mandatory_depends_on": "eval:doc.qr_mode=='Value'" },
     { "fieldname": "value_name", "fieldtype": "Dynamic Link", "label": "Value Document", "options": "value_doctype", "depends_on": "eval:doc.qr_mode=='Value'", "mandatory_depends_on": "eval:doc.qr_mode=='Value'" },
@@ -47,13 +49,23 @@
     { "fieldname": "image", "fieldtype": "Attach Image", "label": "QR Image", "read_only": 1 },
     { "fieldname": "file_url", "fieldtype": "Data", "label": "File URL", "read_only": 1, "in_list_view": 1 },
     { "fieldname": "absolute_file_url", "fieldtype": "Data", "label": "Absolute File URL", "read_only": 1 },
-    { "fieldname": "qr_token", "fieldtype": "Link", "label": "QR Token", "options": "QR Token", "read_only": 1, "in_list_view": 1 },
     { "fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Active\nDisabled", "default": "Active" }
   ],
   "permissions": [
-    { "role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "print": 1, "email": 1, "export": 1, "report": 1, "share": 1 },
-    { "role": "QR Manager", "read": 1, "write": 1, "create": 1, "delete": 0, "print": 1 },
-    { "role": "All", "read": 1 }
+    {
+      "role": "System Manager",
+      "read": 1, "write": 1, "create": 1, "delete": 1,
+      "print": 1, "email": 1, "export": 1, "report": 1, "share": 1
+    },
+    {
+      "role": "QR Manager",
+      "read": 1, "write": 1, "create": 1, "delete": 0,
+      "print": 1, "export": 1, "report": 1
+    },
+    {
+      "role": "QR User",
+      "read": 1
+    }
   ],
   "sort_field": "modified",
   "sort_order": "desc"

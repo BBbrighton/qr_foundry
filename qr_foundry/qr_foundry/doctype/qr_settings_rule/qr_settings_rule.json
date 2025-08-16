@@ -8,7 +8,6 @@
   "field_order": [
     "enabled",
     "target_doctype",
-    "button_label",
     "default_link_type",
     "default_action",
     "auto_generate_on_first_save"
@@ -23,7 +22,6 @@
       "reqd": 1,
       "in_list_view": 1
     },
-    { "fieldname": "button_label", "label": "Button Label", "fieldtype": "Data", "default": "QR" },
     {
       "fieldname": "default_link_type",
       "label": "Link Type",
@@ -48,5 +46,8 @@
       "description": "If enabled, generates once when the document is first saved."
     }
   ],
-  "permissions": []
+  "permissions": [
+    { "role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1 },
+    { "role": "QR Manager",     "read": 1, "write": 1, "create": 1 }
+  ]
 }

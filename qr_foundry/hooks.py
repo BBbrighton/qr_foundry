@@ -24,9 +24,12 @@ app_license = "mit"
 # Includes in <head>
 # ------------------
 
-# include js, css files in header of desk.html
-# app_include_css = "qr_foundry.bundle.css"
-# app_include_js = "qr_foundry.bundle.js"
+# REPLACE/SET app_include_js to the universal buttons file
+app_include_js = [
+	"/assets/qr_foundry/js/qr_foundry/buttons.js",  # universal doc buttons
+]
+
+# DO NOT include app_include_css unless the file actually exists
 
 # include js, css files in header of web template
 # web_include_css = "/assets/qr_foundry/css/qr_foundry.css"
@@ -43,7 +46,7 @@ app_license = "mit"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
+doctype_js = {"QR List": "public/js/qr_foundry/qr_list_buttons.js"}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -74,16 +77,27 @@ app_license = "mit"
 # ----------
 
 # add methods and filters to jinja environment
-# jinja = {
-# 	"methods": "qr_foundry.utils.jinja_methods",
-# 	"filters": "qr_foundry.utils.jinja_filters"
-# }
+jinja = {
+	"methods": [
+		"qr_foundry.print_helpers.qr_data_uri",
+		"qr_foundry.print_helpers.embed_file",
+	]
+}
 
 # Installation
 # ------------
 
 # before_install = "qr_foundry.install.before_install"
 # after_install = "qr_foundry.install.after_install"
+
+after_migrate = [
+	"qr_foundry.patches.ensure_qr_manager_role.run",
+	"qr_foundry.patches.cleanup_legacy_client_scripts.run",
+]
+
+# Boot Session
+# ------------
+boot_session = "qr_foundry.boot.boot_session"
 
 # Uninstallation
 # ------------
@@ -129,6 +143,15 @@ app_license = "mit"
 # ---------------
 # Override standard doctype classes
 
+# Jinja Methods for Print Formats
+# ----------------------------------
+jinja = {
+	"methods": [
+		"qr_foundry.print_helpers.qr_src",
+		"qr_foundry.print_helpers.qr_data_uri",
+	]
+}
+
 # override_doctype_class = {
 # 	"ToDo": "custom_app.overrides.CustomToDo"
 # }
@@ -137,13 +160,7 @@ app_license = "mit"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {"*": {"after_insert": "qr_foundry.hooks_impl.after_insert_autogen"}}
 
 # Scheduled Tasks
 # ---------------
@@ -241,4 +258,3 @@ app_license = "mit"
 # default_log_clearing_doctypes = {
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
-

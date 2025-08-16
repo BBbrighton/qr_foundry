@@ -1,47 +1,7 @@
 frappe.ui.form.on("QR List", {
   refresh(frm) {
-    const roles = frappe.user_roles || [];
-    const can = roles.includes("System Manager") || roles.includes("QR Manager");
-    if (!can) return;
-
-    if (!frm.doc.__islocal) {
-      frm.add_custom_button(__("Preview"), async () => {
-        try {
-          frappe.dom.freeze(__("Rendering preview..."));
-          const r = await frappe.call({
-            method: "qr_foundry.api.preview_qr_list",
-            args: { name: frm.doc.name }
-          });
-          if (r.message && r.message.data_uri) {
-            const w = window.open("", "_blank");
-            w.document.write(`<img src="${r.message.data_uri}" style="max-width:100%">`);
-          }
-        } finally {
-          frappe.dom.unfreeze();
-        }
-      });
-
-      frm.add_custom_button(__("Generate / Refresh"), async () => {
-        try {
-          frappe.dom.freeze(__("Generating..."));
-          const r = await frappe.call({
-            method: "qr_foundry.api.generate_qr_list",
-            args: { name: frm.doc.name }
-          });
-          if (r.message && r.message.absolute_file_url) {
-            frappe.show_alert({ message: __("QR ready"), indicator: "green" });
-            frm.reload_doc();
-            window.open(r.message.absolute_file_url, "_blank");
-          }
-        } finally {
-          frappe.dom.unfreeze();
-        }
-      });
-    } else {
-      frm.add_custom_button(__("Save to Generate"), () => {
-        frappe.show_alert({ message: __("Please save first"), indicator: "orange" });
-      });
-    }
+    // QR buttons are now handled by the universal button system
+    // No custom buttons needed here - they appear automatically via QR Rule
   },
 
   // When value_doctype changes, populate value_field options

@@ -5,35 +5,8 @@ from frappe.model.document import Document
 
 class QRList(Document):
 	def on_trash(self):
-		"""Cleanup when a QR List row is deleted:
-		- If a linked QR Token exists:
-		    - delete it if there are no scan logs
-		    - else, set status = Revoked (preserve audit trail)
-		"""
-		self._cleanup_qr_token()
-
-	# ---- helpers
-
-	def _cleanup_qr_token(self):
-		token_name = getattr(self, "qr_token", None)
-		if not token_name:
-			return
-
-		if not frappe.db.exists("QR Token", token_name):
-			return
-
-		# Does this token have any scan logs?
-		has_logs = frappe.db.exists("QR Scan Log", {"token": token_name})
-
-		try:
-			if has_logs:
-				# Keep history, just revoke
-				frappe.db.set_value("QR Token", token_name, "status", "Revoked", update_modified=False)
-			else:
-				# No history -> delete token record
-				frappe.delete_doc("QR Token", token_name, ignore_permissions=True, force=1)
-		except Exception:
-			frappe.log_error(frappe.get_traceback(), "QR Foundry: token cleanup on QR List delete")
+		for t in frappe.get_all("QR Token", filters={"qr_list": self.name}, pluck="name"):
+			frappe.delete_doc("QR Token", t, ignore_permissions=True, delete_permanently=True)
 
 @frappe.whitelist()
 def get_value_fields(doctype):

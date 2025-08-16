@@ -9,6 +9,7 @@
     "allowed_domains",
     "default_rate_limit_per_min",
     "require_login",
+    "store_images_private",
     "section_rules",
     "rules"
   ],
@@ -33,6 +34,13 @@
       "description": "If enabled, /qr?token=... requires a signed-in user."
     },
     {
+      "fieldname": "store_images_private",
+      "label": "Store QR Images as Private",
+      "fieldtype": "Check",
+      "default": "1",
+      "description": "When enabled, saved PNGs are private files. Prints embed a data-URI, not a URL."
+    },
+    {
       "fieldname": "section_rules",
       "label": "Enable QR Button on DocTypes",
       "fieldtype": "Section Break"
@@ -45,6 +53,7 @@
     }
   ],
   "permissions": [
-    { "role": "System Manager", "read": 1, "write": 1 }
+    { "role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "print": 1, "email": 1, "export": 1, "report": 1, "share": 1 },
+    { "role": "QR Manager",     "read": 1, "write": 1 }
   ]
 }

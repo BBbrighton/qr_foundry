@@ -1,118 +1,54 @@
 from __future__ import annotations
+import secrets
 import frappe
-from frappe import _
-from frappe.utils import get_url
+from frappe.utils import get_url, get_url_to_form, get_url_to_list
 
-from qr_foundry.services.qr_ops import attach_qr_image_to_qr_list, _build_route
+def build_token_resolver_url(raw_token: str) -> str:
+    """Build the resolver URL for a token."""
+    return get_url(f"/qr?token={raw_token}")
 
+def _build_target_url_for_qr_list(qr) -> str:
+    """Return a relative Desk URL for the QR List target (v15-safe)."""
+    dt = qr.target_doctype
+    dn = qr.target_name
+    action = (getattr(qr, "action", None) or "view").lower()
+    if action in ("view", "", None):
+        return get_url_to_form(dt, dn)   # /app/<doctype-slug>/<name>
+    if action == "list":
+        return get_url_to_list(dt)       # /app/<doctype-slug>
+    return get_url_to_form(dt, dn)
 
-def _assert_qr_token_present():
-	if not frappe.db.exists("DocType", "QR Token"):
-		frappe.throw(_("QR Token doctype is not installed."))
+def issue_token_for_qr_list(qr_list_name: str):
+    """
+    Create an Active token for this QR List and set encoded_content to the FINAL URL
+    (absolute Desk URL). DO NOT store /qr?token=... here.
+    """
+    qr = frappe.get_doc("QR List", qr_list_name)
+    token = secrets.token_urlsafe(32)
+    target_rel = _build_target_url_for_qr_list(qr)
+    target_abs = get_url(target_rel)
 
+    doc = frappe.get_doc({
+        "doctype": "QR Token",
+        "qr_list": qr_list_name,
+        "token": token,
+        "encoded_content": target_abs,   # <-- final destination
+        "status": "Active",
+    })
+    doc.insert(ignore_permissions=True)
+    return doc
 
-def _to_absolute(url_or_route: str) -> str:
-	s = (url_or_route or "").strip()
-	return s if s.startswith(("http://", "https://")) else get_url(s)
-
-
-def issue_token_for_qr_list(qr_list_name: str) -> dict:
-	_assert_qr_token_present()
-	row = frappe.get_doc("QR List", qr_list_name)
-	if (row.qr_mode or "URL").strip() != "URL":
-		frappe.throw(_("Token link type is available only for URL mode."))
-
-	custom_route = (getattr(row, "custom_route", "") or "").strip()
-	target_url = (getattr(row, "target_url", "") or "").strip()
-	dt, dn = getattr(row, "target_doctype", None), getattr(row, "target_name", None)
-	action = (getattr(row, "action", None) or getattr(row, "target_action", None) or "view").strip()
-
-	if custom_route:
-		encoded = custom_route
-	elif target_url:
-		encoded = target_url
-	elif dt and dn:
-		encoded = _build_route(dt, dn, action, None)
-	else:
-		frappe.throw(_("Please select a target (DocType + Document) or provide a Custom URL."))
-	encoded = _to_absolute(encoded)
-
-	tok = frappe.get_doc("QR Token", row.qr_token) if getattr(row, "qr_token", None) else None
-	if not tok:
-		tok = frappe.new_doc("QR Token")
-		tok.encoded_content = encoded  # immutable after first issue
-		tok.status = "Active"
-		tok.insert(ignore_permissions=True)
-		row.db_set("qr_token", tok.name, update_modified=False)
-	else:
-		if (tok.encoded_content or "").strip() != encoded:
-			frappe.throw(
-				_("This QR already has a token bound to a target. To change the target, rotate the token."),
-				title=_("Immutable Target"),
-			)
-		if (tok.status or "Active") != "Active":
-			tok.db_set("status", "Active", update_modified=False)
-
-	resolver_url = f"{get_url('/qr')}?token={tok.token}"
-	out = attach_qr_image_to_qr_list(
-		row.name, resolver_url, label=(getattr(row, "label_text", None) or tok.token)
-	)
-	return {
-		"qr_token": tok.name,
-		"token": tok.token,
-		"resolver_url": resolver_url,
-		"file_url": out.get("file_url"),
-		"absolute_file_url": out.get("absolute_file_url"),
-		"encoded_url": out.get("encoded_url"),
-	}
-
-
-def rotate_token_for_qr_list(qr_list_name: str) -> dict:
-	_assert_qr_token_present()
-	row = frappe.get_doc("QR List", qr_list_name)
-
-	encoded = None
-	if getattr(row, "qr_token", None):
-		try:
-			tok = frappe.get_doc("QR Token", row.qr_token)
-			encoded = (tok.encoded_content or "").strip()
-		except Exception:
-			encoded = None
-
-	if not encoded:
-		custom_route = (getattr(row, "custom_route", "") or "").strip()
-		target_url = (getattr(row, "target_url", "") or "").strip()
-		dt, dn = getattr(row, "target_doctype", None), getattr(row, "target_name", None)
-		action = (getattr(row, "action", None) or getattr(row, "target_action", None) or "view").strip()
-		if custom_route:
-			encoded = custom_route
-		elif target_url:
-			encoded = target_url
-		elif dt and dn:
-			encoded = _build_route(dt, dn, action, None)
-		else:
-			frappe.throw(_("No target to rotate"))
-		encoded = _to_absolute(encoded)
-
-	new_tok = frappe.new_doc("QR Token")
-	new_tok.encoded_content = encoded
-	new_tok.status = "Active"
-	new_tok.insert(ignore_permissions=True)
-
-	old = getattr(row, "qr_token", None)
-	row.db_set("qr_token", new_tok.name, update_modified=False)
-	if old and frappe.db.exists("QR Token", old):
-		frappe.db.set_value("QR Token", old, "status", "Revoked", update_modified=False)
-
-	resolver_url = f"{get_url('/qr')}?token={new_tok.token}"
-	out = attach_qr_image_to_qr_list(
-		row.name, resolver_url, label=(getattr(row, "label_text", None) or new_tok.token)
-	)
-	return {
-		"qr_token": new_tok.name,
-		"token": new_tok.token,
-		"resolver_url": resolver_url,
-		"file_url": out.get("file_url"),
-		"absolute_file_url": out.get("absolute_file_url"),
-		"encoded_url": out.get("encoded_url"),
-	}
+def ensure_active_token_for_qr_list(qr_list_name: str) -> str:
+    """
+    Return an active token string; issue one if none exists.
+    """
+    tok = frappe.get_all(
+        "QR Token",
+        filters={"qr_list": qr_list_name, "status": "Active"},
+        fields=["token"],
+        order_by="creation desc",
+        limit=1,
+    )
+    if tok:
+        return tok[0]["token"]
+    return issue_token_for_qr_list(qr_list_name).token

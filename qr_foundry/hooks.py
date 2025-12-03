@@ -79,6 +79,7 @@ doctype_js = {"QR List": "public/js/qr_foundry/qr_list_buttons.js"}
 # add methods and filters to jinja environment
 jinja = {
 	"methods": [
+		"qr_foundry.print_helpers.qr_src",
 		"qr_foundry.print_helpers.qr_data_uri",
 		"qr_foundry.print_helpers.embed_file",
 	]
@@ -145,12 +146,7 @@ boot_session = "qr_foundry.boot.boot_session"
 
 # Jinja Methods for Print Formats
 # ----------------------------------
-jinja = {
-	"methods": [
-		"qr_foundry.print_helpers.qr_src",
-		"qr_foundry.print_helpers.qr_data_uri",
-	]
-}
+# NOTE: Jinja methods already defined above - removed duplicate definition
 
 # override_doctype_class = {
 # 	"ToDo": "custom_app.overrides.CustomToDo"

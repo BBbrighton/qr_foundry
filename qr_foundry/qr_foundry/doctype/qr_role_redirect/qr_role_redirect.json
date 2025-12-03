@@ -1,0 +1,80 @@
+{
+  "doctype": "DocType",
+  "name": "QR Role Redirect",
+  "module": "QR Foundry",
+  "istable": 1,
+  "custom": 0,
+  "editable_grid": 1,
+  "track_changes": 0,
+  "field_order": [
+    "target_doctype",
+    "role",
+    "label",
+    "redirect_type",
+    "redirect_action",
+    "custom_url",
+    "priority"
+  ],
+  "fields": [
+    {
+      "fieldname": "target_doctype",
+      "label": "DocType",
+      "fieldtype": "Link",
+      "options": "DocType",
+      "reqd": 1,
+      "in_list_view": 1,
+      "description": "The DocType this redirect applies to. IMPORTANT: Role-based redirects only work when Link Type = Token in the Rules table above."
+    },
+    {
+      "fieldname": "role",
+      "label": "Role",
+      "fieldtype": "Link",
+      "options": "Role",
+      "reqd": 1,
+      "in_list_view": 1,
+      "description": "Users with this role will see this redirect option."
+    },
+    {
+      "fieldname": "label",
+      "label": "Label",
+      "fieldtype": "Data",
+      "reqd": 1,
+      "in_list_view": 1,
+      "description": "Button text on choice page. Examples: 'Edit Order', 'Open in POS'"
+    },
+    {
+      "fieldname": "redirect_type",
+      "label": "Redirect Type",
+      "fieldtype": "Select",
+      "options": "action\ncustom_url",
+      "default": "action",
+      "reqd": 1,
+      "in_list_view": 1,
+      "description": "'action' = view/edit/print/list. 'custom_url' = custom path."
+    },
+    {
+      "fieldname": "redirect_action",
+      "label": "Action",
+      "fieldtype": "Select",
+      "options": "\nview\nedit\nprint\nlist",
+      "default": "view",
+      "in_list_view": 1,
+      "description": "Used when Redirect Type = action"
+    },
+    {
+      "fieldname": "custom_url",
+      "label": "Custom URL",
+      "fieldtype": "Data",
+      "description": "Used when Redirect Type = custom_url. Placeholders: {name}, {doctype}, {field:FIELDNAME}"
+    },
+    {
+      "fieldname": "priority",
+      "label": "Priority",
+      "fieldtype": "Int",
+      "default": "0",
+      "in_list_view": 1,
+      "description": "Lower = shown first on choice page (0 = top)"
+    }
+  ],
+  "permissions": []
+}

@@ -6,7 +6,7 @@ from typing import Optional
 
 import frappe
 from frappe import _
-from frappe.utils import get_url
+from frappe.utils import get_url, get_url_to_form, get_url_to_list
 
 logger = frappe.logger("qr_foundry")
 from frappe.utils.file_manager import save_file
@@ -81,12 +81,16 @@ def _build_route(doctype: Optional[str], name: Optional[str],
 	if not doctype or not name:
 		frappe.throw("Direct mode requires target Doctype and Name (or a custom route).", title="QR Foundry")
 
-	# Example builder — keep your existing mapping if different:
+	# Use Frappe's built-in URL builders for proper slug handling
 	if action == "print" and report:
 		return f"/printview?doctype={urlparse.quote(doctype)}&name={urlparse.quote(name)}&format={urlparse.quote(report)}"
+	elif action == "print":
+		return f"/printview?doctype={urlparse.quote(doctype)}&name={urlparse.quote(name)}"
+	elif action == "list":
+		return get_url_to_list(doctype)
 
-	# Default: open the document in Desk
-	return f"/app/{urlparse.quote(doctype)}/{urlparse.quote(name)}"
+	# Default: open the document in Desk (uses proper slug like 'warehouse' not 'Warehouse')
+	return get_url_to_form(doctype, name)
 
 
 def compute_and_persist_encoded(qr_list_doc) -> str:

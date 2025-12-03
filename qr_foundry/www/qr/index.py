@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 import datetime as dt
+import json
+import re
 from urllib.parse import urlparse
 
 import frappe
@@ -141,6 +143,188 @@ def _atomic_use(token_name: str, has_max_uses: bool, has_expires_on: bool) -> bo
 
 
 # -------------------------------
+# Role-based redirect helpers
+# -------------------------------
+
+
+def _get_qr_rule(doctype_name: str) -> dict | None:
+	"""Get QR Rule for a doctype, with role redirect config."""
+	try:
+		rules = frappe.get_all(
+			"QR Rule",
+			filters={"doctype_name": doctype_name},
+			fields=["enable_role_redirects", "role_redirects_json"],
+			limit=1,
+		)
+		return rules[0] if rules else None
+	except Exception:
+		return None
+
+
+def _slugify(text: str) -> str:
+	"""Convert 'Sales Order' to 'sales-order'."""
+	return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
+
+
+def _replace_field_placeholders(url: str, target_doctype: str, target_name: str) -> str | None:
+	"""
+	Replace {field:FIELDNAME} placeholders with actual field values.
+	Returns None if any placeholder fails (Option C: fail that option).
+	"""
+	pattern = r"\{field:(\w+)\}"
+	matches = re.findall(pattern, url)
+	if not matches:
+		return url
+
+	try:
+		# Fetch the target document to get field values
+		doc = frappe.get_doc(target_doctype, target_name)
+		for fieldname in matches:
+			value = getattr(doc, fieldname, None)
+			if value is None:
+				# Field doesn't exist or is empty - fail this option
+				return None
+			url = url.replace(f"{{field:{fieldname}}}", str(value))
+		return url
+	except Exception:
+		return None
+
+
+def _build_redirect_url(redirect_config: dict, target_doctype: str, target_name: str) -> str | None:
+	"""
+	Build redirect URL from config.
+	Returns None if URL cannot be built (Option C: fail that option).
+	"""
+	try:
+		redirect_type = redirect_config.get("redirect_type", "action")
+
+		if redirect_type == "custom_url":
+			url = redirect_config.get("custom_url", "")
+			if not url:
+				return None
+
+			# Replace standard placeholders
+			url = url.replace("{name}", target_name or "")
+			url = url.replace("{doctype}", target_doctype or "")
+			url = url.replace("{doctype_slug}", _slugify(target_doctype or ""))
+
+			# Replace field placeholders
+			url = _replace_field_placeholders(url, target_doctype, target_name)
+			if url is None:
+				return None
+
+			# Normalize to absolute URL
+			if not url.startswith(("http://", "https://")):
+				url = get_url(url)
+
+			return url
+		else:
+			# Action-based redirect
+			action = redirect_config.get("redirect_action", "view")
+			from frappe.utils import get_url_to_form, get_url_to_list
+
+			if action == "list":
+				rel_url = get_url_to_list(target_doctype)
+			elif action == "print":
+				rel_url = f"/printview?doctype={target_doctype}&name={target_name}"
+			elif action == "edit":
+				rel_url = get_url_to_form(target_doctype, target_name)
+			else:  # view
+				rel_url = get_url_to_form(target_doctype, target_name)
+
+			return get_url(rel_url)
+	except Exception:
+		return None
+
+
+def _get_role_based_resolution(tok: dict, default_target: str) -> dict:
+	"""
+	Determine redirect target(s) based on user roles.
+	Returns dict with mode and target/options.
+
+	Smart Mode:
+	- 0 valid matches → default target
+	- 1 valid match → direct redirect to that target
+	- 2+ valid matches → show choice page
+	"""
+	result = {"mode": "redirect", "target": default_target}
+
+	# Get QR List to find target doctype
+	qr_list_name = tok.get("qr_list")
+	if not qr_list_name:
+		return result
+
+	try:
+		qr_list = frappe.get_doc("QR List", qr_list_name)
+		target_doctype = qr_list.target_doctype
+		target_name = qr_list.target_name
+
+		if not target_doctype:
+			return result
+
+		# Check if role redirects are enabled for this doctype
+		rule = _get_qr_rule(target_doctype)
+		if not rule or not rule.get("enable_role_redirects"):
+			return result
+
+		# Guest users always get default
+		current_user = getattr(getattr(frappe, "session", None), "user", None)
+		if not current_user or current_user == "Guest":
+			return result
+
+		# Get user's roles
+		user_roles = set(frappe.get_roles(current_user))
+
+		# Parse role redirects
+		redirects_json = rule.get("role_redirects_json") or "[]"
+		try:
+			redirects = json.loads(redirects_json)
+		except (json.JSONDecodeError, TypeError):
+			return result
+
+		if not redirects:
+			return result
+
+		# Find matching redirects and validate URLs (Option C: graceful degradation)
+		valid_options = []
+		for r in redirects:
+			if r.get("role") not in user_roles:
+				continue
+
+			# Try to build the URL - if it fails, skip this option
+			url = _build_redirect_url(r, target_doctype, target_name)
+			if url:
+				valid_options.append({
+					"label": r.get("label", r.get("role", "Go")),
+					"url": url,
+					"priority": r.get("priority", 0),
+				})
+
+		# Sort by priority
+		valid_options.sort(key=lambda x: x.get("priority", 0))
+
+		# Smart mode decision
+		if len(valid_options) == 0:
+			# No valid matches → default
+			return result
+		elif len(valid_options) == 1:
+			# Exactly one valid match → direct redirect
+			return {"mode": "redirect", "target": valid_options[0]["url"]}
+		else:
+			# Multiple valid matches → choice page
+			return {
+				"mode": "choose",
+				"options": valid_options,
+				"doctype": target_doctype,
+				"name": target_name,
+			}
+
+	except Exception:
+		# Any error → fall back to default
+		return result
+
+
+# -------------------------------
 # Logging (minimal, schema-aware)
 # -------------------------------
 
@@ -275,27 +459,27 @@ def get_context(context):
 		frappe.local.response["http_status_code"] = 410
 		return context
 
-	# --- Resolve target once, upfront, for logging and redirects ---
-	target = (tok.get("encoded_content") or "").strip()
+	# --- Resolve default target (backward compatible) ---
+	default_target = (tok.get("encoded_content") or "").strip()
 
 	# Normalize to absolute if relative
-	if target and not target.startswith(("http://", "https://")):
-		target = get_url(target)
+	if default_target and not default_target.startswith(("http://", "https://")):
+		default_target = get_url(default_target)
 
 	# Self-heal if encoded_content accidentally points back to the resolver
-	if target and (target.startswith("/qr?token=") or target.endswith(f"token={tok_str}")):
+	if default_target and (default_target.startswith("/qr?token=") or default_target.endswith(f"token={tok_str}")):
 		try:
 			qr = frappe.get_doc("QR List", tok["qr_list"])
 			from frappe.utils import get_url_to_form, get_url_to_list
-			dt, dn = qr.target_doctype, qr.target_name
+			doctype, docname = qr.target_doctype, qr.target_name
 			action = (getattr(qr, "action", None) or "view").lower()
 			if action in ("view", "", None):
-				rebuilt_rel = get_url_to_form(dt, dn)
+				rebuilt_rel = get_url_to_form(doctype, docname)
 			elif action == "list":
-				rebuilt_rel = get_url_to_list(dt)
+				rebuilt_rel = get_url_to_list(doctype)
 			else:
-				rebuilt_rel = get_url_to_form(dt, dn)
-			target = get_url(rebuilt_rel)
+				rebuilt_rel = get_url_to_form(doctype, docname)
+			default_target = get_url(rebuilt_rel)
 		except Exception:
 			# keep target as-is or None; logging can handle None
 			pass
@@ -303,7 +487,7 @@ def get_context(context):
 	st = _settings()
 	if st.get("require_login") and frappe.session.user == "Guest":
 		# target is now defined (may be None); safe for logging
-		_log("login_required", tok["name"], target)
+		_log("login_required", tok["name"], default_target)
 
 		from urllib.parse import quote
 		# Redirect to login, then back to the resolver so we can consume token and log "ok" post-login
@@ -338,6 +522,25 @@ def get_context(context):
 		)
 		frappe.local.response["http_status_code"] = 429
 		return context
+
+	# --- Role-based redirect resolution (Smart Mode) ---
+	resolution = _get_role_based_resolution(tok, default_target)
+
+	if resolution["mode"] == "choose":
+		# Multiple valid options → show choice page (no consumption yet)
+		# We'll consume when user clicks a choice
+		context.update({
+			"mode": "choose",
+			"title": "Select Destination",
+			"options": resolution["options"],
+			"doctype": resolution.get("doctype", ""),
+			"name": resolution.get("name", ""),
+			"token": tok_str,
+		})
+		return context
+
+	# Single target (either from role redirect or default)
+	target = resolution.get("target", default_target)
 
 	# Allowed domain check BEFORE consumption
 	site_root = get_url("/")

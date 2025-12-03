@@ -11,7 +11,10 @@
     "require_login",
     "store_images_private",
     "section_rules",
-    "rules"
+    "rules",
+    "section_role_redirects",
+    "role_redirects_html",
+    "role_redirects"
   ],
   "fields": [
     {
@@ -50,6 +53,24 @@
       "label": "Rules",
       "fieldtype": "Table",
       "options": "QR Settings Rule"
+    },
+    {
+      "fieldname": "section_role_redirects",
+      "label": "Role-Based Redirects",
+      "fieldtype": "Section Break",
+      "collapsible": 1,
+      "description": "Configure role-based redirects for Token-based QR codes. Each row maps a Role + DocType to a redirect destination."
+    },
+    {
+      "fieldname": "role_redirects_html",
+      "fieldtype": "HTML",
+      "options": "<div class='alert alert-info'><strong>Note:</strong> Role-based redirects only work for <b>Token</b> link types. Direct links bypass this feature.<br><br>When a logged-in user scans a Token QR, they will be redirected based on their roles. If a user has multiple matching roles, they'll see a choice page to select their destination. Guest users always get the default redirect.</div>"
+    },
+    {
+      "fieldname": "role_redirects",
+      "label": "Role Redirect Rules",
+      "fieldtype": "Table",
+      "options": "QR Role Redirect"
     }
   ],
   "permissions": [

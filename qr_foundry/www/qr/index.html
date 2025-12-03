@@ -2,10 +2,106 @@
   <meta name="referrer" content="no-referrer">
   <h2>QR</h2>
   <p>{{ value }}</p>
+
+{% elif mode == "choose" %}
+  <meta name="referrer" content="no-referrer">
+  <style>
+    .qr-choice-container {
+      max-width: 480px;
+      margin: 40px auto;
+      padding: 24px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    .qr-choice-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .qr-choice-header h2 {
+      margin: 0 0 8px 0;
+      font-size: 24px;
+      font-weight: 600;
+      color: #1f2937;
+    }
+    .qr-choice-header p {
+      margin: 0;
+      color: #6b7280;
+      font-size: 14px;
+    }
+    .qr-choice-doc {
+      background: #f3f4f6;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .qr-choice-doc .doctype {
+      font-size: 12px;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .qr-choice-doc .docname {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1f2937;
+      margin-top: 4px;
+    }
+    .qr-choice-options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .qr-choice-btn {
+      display: block;
+      width: 100%;
+      padding: 16px 20px;
+      background: #ffffff;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      text-decoration: none;
+      color: #1f2937;
+      font-size: 16px;
+      font-weight: 500;
+      text-align: center;
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+    .qr-choice-btn:hover {
+      border-color: #3b82f6;
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+    .qr-choice-btn:active {
+      transform: scale(0.98);
+    }
+  </style>
+  <div class="qr-choice-container">
+    <div class="qr-choice-header">
+      <h2>{{ title or "Select Destination" }}</h2>
+      <p>Choose where you'd like to go</p>
+    </div>
+
+    {% if doctype and name %}
+    <div class="qr-choice-doc">
+      <div class="doctype">{{ doctype }}</div>
+      <div class="docname">{{ name }}</div>
+    </div>
+    {% endif %}
+
+    <div class="qr-choice-options">
+      {% for option in options %}
+      <a href="{{ option.url }}" class="qr-choice-btn">
+        {{ option.label }}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+
 {% elif mode == "message" %}
   <meta name="referrer" content="no-referrer">
   <h2>{{ title }}</h2>
   <p>{{ message }}</p>
+
 {% else %}
   <meta name="referrer" content="no-referrer">
   <h2>QR</h2>

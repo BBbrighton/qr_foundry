@@ -1,4 +1,5 @@
 from __future__ import annotations
+import json
 import frappe
 from frappe.model.document import Document
 
@@ -41,19 +42,55 @@ def _client_script_body(dt: str, label: str) -> str:
 	return CLIENT_SCRIPT_TEMPLATE.replace("__DT__", dt).replace("__LABEL__", safe_label)
 
 
+def _build_role_redirects_by_doctype(role_redirects) -> dict[str, list]:
+	"""
+	Group role_redirects by target_doctype.
+	Returns: { "Sales Order": [...], "Item": [...] }
+	"""
+	by_doctype: dict[str, list] = {}
+	for r in role_redirects or []:
+		dt = getattr(r, "target_doctype", None)
+		if not dt:
+			continue
+		if dt not in by_doctype:
+			by_doctype[dt] = []
+		by_doctype[dt].append({
+			"role": r.role,
+			"label": r.label,
+			"redirect_type": r.redirect_type,
+			"redirect_action": getattr(r, "redirect_action", None),
+			"custom_url": getattr(r, "custom_url", None),
+			"priority": r.priority or 0,
+		})
+
+	# Sort each doctype's redirects by priority
+	for dt in by_doctype:
+		by_doctype[dt].sort(key=lambda x: x.get("priority", 0))
+
+	return by_doctype
+
+
 class QRSettings(Document):
 	def on_update(self):
-		# Legacy button generation disabled in favor of universal button.
-		
+		# Build role redirects grouped by doctype
+		role_redirects_by_dt = _build_role_redirects_by_doctype(self.role_redirects)
+
 		desired: dict[str, dict] = {}
 		for row in self.rules or []:
 			dt = getattr(row, "target_doctype", None) or getattr(row, "doctype", None)
 			if not row.enabled or not dt:
 				continue
+
+			# Check if this doctype has role redirects configured
+			dt_role_redirects = role_redirects_by_dt.get(dt, [])
+			enable_role_redirects = len(dt_role_redirects) > 0
+
 			desired[dt] = {
 				"link_type": (row.default_link_type or "Direct").strip(),
 				"action": (row.default_action or "view").strip(),
 				"auto": bool(getattr(row, "auto_generate_on_first_save", 0)),
+				"enable_role_redirects": enable_role_redirects,
+				"role_redirects_json": json.dumps(dt_role_redirects) if dt_role_redirects else "[]",
 			}
 
 		for dt, cfg in desired.items():
@@ -67,6 +104,8 @@ class QRSettings(Document):
 			rule.default_link_type = cfg["link_type"]
 			rule.default_action = cfg["action"]
 			rule.auto_generate_on_first_save = 1 if cfg["auto"] else 0
+			rule.enable_role_redirects = 1 if cfg["enable_role_redirects"] else 0
+			rule.role_redirects_json = cfg["role_redirects_json"]
 			(rule.save if not rule.is_new() else rule.insert)()
 
 		stale = frappe.get_all("QR Rule", pluck="doctype_name")

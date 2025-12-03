@@ -10,7 +10,10 @@
     "doctype_name",
     "default_link_type",
     "default_action",
-    "auto_generate_on_first_save"
+    "auto_generate_on_first_save",
+    "section_role_redirects",
+    "enable_role_redirects",
+    "role_redirects_json"
   ],
   "fields": [
     {
@@ -42,6 +45,27 @@
       "label": "Auto-generate on First Save",
       "fieldtype": "Check",
       "default": "0"
+    },
+    {
+      "fieldname": "section_role_redirects",
+      "label": "Role-Based Redirects",
+      "fieldtype": "Section Break",
+      "collapsible": 1
+    },
+    {
+      "fieldname": "enable_role_redirects",
+      "label": "Enable Role-Based Redirects",
+      "fieldtype": "Check",
+      "default": "0",
+      "in_list_view": 1,
+      "description": "Cached from QR Settings Rule"
+    },
+    {
+      "fieldname": "role_redirects_json",
+      "label": "Role Redirects (JSON)",
+      "fieldtype": "Long Text",
+      "read_only": 1,
+      "description": "JSON cache of role redirect rules for fast resolver lookup"
     }
   ],
   "permissions": [
